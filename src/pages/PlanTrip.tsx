@@ -1433,14 +1433,14 @@ export const PlanTrip: React.FC = () => {
                               {canEdit && (
                                 <div className="flex border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white h-8">
                                   <button 
-                                    onClick={(e) => { e.stopPropagation(); handleMoveLocation(idx, 'up'); }}
+                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, -1); }}
                                     className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors border-r border-gray-200 flex items-center justify-center active:bg-orange-100"
                                     title="向上移动"
                                   >
                                     <ChevronUp className="w-4 h-4" />
                                   </button>
                                   <button 
-                                    onClick={(e) => { e.stopPropagation(); handleMoveLocation(idx, 'down'); }}
+                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, 1); }}
                                     className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center justify-center active:bg-orange-100"
                                     title="向下移动"
                                   >
@@ -1539,14 +1539,14 @@ export const PlanTrip: React.FC = () => {
                               {canEdit && (
                                 <div className="flex border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white h-8">
                                   <button 
-                                    onClick={(e) => { e.stopPropagation(); handleMoveLocation(idx, 'up'); }}
+                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, -1); }}
                                     className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors border-r border-gray-200 flex items-center justify-center active:bg-orange-100"
                                     title="向上移动"
                                   >
                                     <ChevronUp className="w-4 h-4" />
                                   </button>
                                   <button 
-                                    onClick={(e) => { e.stopPropagation(); handleMoveLocation(idx, 'down'); }}
+                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, 1); }}
                                     className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center justify-center active:bg-orange-100"
                                     title="向下移动"
                                   >
