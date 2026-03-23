@@ -1049,9 +1049,87 @@ export const PlanTrip: React.FC = () => {
             )}
 
             <div className="relative before:absolute before:left-[15px] before:top-0 before:bottom-0 before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
-              {/* Mixed Timeline */}
-              {mixedTimeline.map((item, idx) => {
-                if (item.itemType === 'transport_departure') {
+              {/* Render the list */}
+                {mixedTimeline.map((item, index) => {
+                  const isLast = index === mixedTimeline.length - 1;
+                  
+                  if (item.itemType === 'location') {
+                    const loc = item as any;
+                    const isAccommodation = loc.place_types?.includes('lodging') || loc.place_types?.includes('accommodation');
+                    return (
+                      <div key={`loc-${loc.id}`} className="relative group mb-6">
+                        <div className="absolute -left-[15px] top-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-sm z-10 text-orange-500">
+                          <MapPin className="w-4 h-4" />
+                        </div>
+                        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow relative overflow-hidden ml-6 flex flex-col">
+                          <div className="flex justify-between items-start gap-2 mb-2 sm:mb-3">
+                            <div className="flex-1 min-w-0 pr-12 sm:pr-24">
+                              <h4 className="font-bold text-gray-800 text-base sm:text-lg mb-1 truncate">{loc.name}</h4>
+                              <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4 leading-relaxed break-words whitespace-normal">{loc.address}</p>
+                              
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
+                                {loc.time && (
+                                  <div className="flex items-center gap-1.5 shrink-0 bg-orange-50 px-2 py-1 rounded-md text-orange-700">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    <span className="font-medium whitespace-nowrap">{loc.time}</span>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {isAccommodation ? (
+                                    <Home className="w-4 h-4 text-purple-500" />
+                                  ) : (
+                                    <Clock className="w-4 h-4 text-orange-500" />
+                                  )}
+                                  <span className="whitespace-nowrap">
+                                    {isAccommodation ? '入住' : '访问'}：
+                                    <span className="font-medium bg-gray-50 px-1.5 sm:px-2 py-0.5 rounded text-gray-700 mx-1">--:--</span>
+                                    -
+                                    <span className="font-medium bg-gray-50 px-1.5 sm:px-2 py-0.5 rounded text-gray-700 mx-1">--:--</span>
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {canEdit && (
+                              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-col sm:flex-row gap-1 sm:gap-2">
+                                <button onClick={() => openEditLocation(loc)} className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-colors" title="编辑">
+                                  <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                </button>
+                                <button onClick={() => duplicateLocation(loc)} className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-gray-300 hover:text-green-500 hover:bg-green-50 rounded-full transition-colors" title="复制">
+                                  <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                </button>
+                                <button onClick={() => confirmDeleteLocation(loc.id)} className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="删除">
+                                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Reordering Controls */}
+                          {canEdit && (
+                            <div className="flex justify-end gap-1.5 mt-2 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-50">
+                              <button 
+                                onClick={() => reorderItem(index, -1)}
+                                disabled={index === 0}
+                                className={`p-1.5 sm:p-2 rounded-lg transition-colors ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-orange-50 hover:text-orange-600'}`}
+                                title="上移"
+                              >
+                                <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" />
+                              </button>
+                              <button 
+                                onClick={() => reorderItem(index, 1)}
+                                disabled={isLast}
+                                className={`p-1.5 sm:p-2 rounded-lg transition-colors ${isLast ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-orange-50 hover:text-orange-600'}`}
+                                title="下移"
+                              >
+                                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
                   const t = item as any;
                   const isFlight = t.type === 'flight' || t.type === '航班';
                   const isExpanded = expandedCards.has(`trans-dep-${t.id}`);
@@ -1713,9 +1791,9 @@ export const PlanTrip: React.FC = () => {
         </div>
       </div>
 
-      {/* Main FAB Container - Always bottom right of the list sidebar */}
+      {/* Main FAB Container - Fixed to bottom right of the screen */}
       {canEdit && (
-        <div className={`absolute bottom-6 right-6 z-[100] flex-col items-end pointer-events-auto ${showMobileMap ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`fixed bottom-6 right-6 z-[9999] flex-col items-end pointer-events-auto ${showMobileMap ? 'hidden md:flex' : 'flex'}`}>
           {/* Expanded Menu */}
           <div className={`absolute bottom-16 right-0 flex flex-col gap-2 items-end transition-all duration-200 ${showFabMenu ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-4 invisible'}`}>
             <button onClick={() => { resetTransportForm(); setShowAddTransport(true); }} className="flex items-center justify-end gap-3 group">
