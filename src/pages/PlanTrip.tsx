@@ -420,6 +420,10 @@ export const PlanTrip: React.FC = () => {
     reorderMixedTimeline(activeDay, newOrder);
   };
 
+  const reorderItem = (index: number, delta: number) => {
+    handleMoveLocation(index, delta < 0 ? 'up' : 'down');
+  };
+
   // Helper to parse YYYY-MM-DD into a local Date object safely to avoid timezone shifts
   const parseLocal = (dateStr: string) => {
     if (!dateStr) return new Date();
@@ -1051,85 +1055,7 @@ export const PlanTrip: React.FC = () => {
             <div className="relative before:absolute before:left-[15px] before:top-0 before:bottom-0 before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
               {/* Render the list */}
                 {mixedTimeline.map((item, index) => {
-                  const isLast = index === mixedTimeline.length - 1;
-                  
-                  if (item.itemType === 'location') {
-                    const loc = item as any;
-                    const isAccommodation = loc.place_types?.includes('lodging') || loc.place_types?.includes('accommodation');
-                    return (
-                      <div key={`loc-${loc.id}`} className="relative group mb-6">
-                        <div className="absolute -left-[15px] top-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-sm z-10 text-orange-500">
-                          <MapPin className="w-4 h-4" />
-                        </div>
-                        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow relative overflow-hidden ml-6 flex flex-col">
-                          <div className="flex justify-between items-start gap-2 mb-2 sm:mb-3">
-                            <div className="flex-1 min-w-0 pr-12 sm:pr-24">
-                              <h4 className="font-bold text-gray-800 text-base sm:text-lg mb-1 truncate">{loc.name}</h4>
-                              <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4 leading-relaxed break-words whitespace-normal">{loc.address}</p>
-                              
-                              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
-                                {loc.time && (
-                                  <div className="flex items-center gap-1.5 shrink-0 bg-orange-50 px-2 py-1 rounded-md text-orange-700">
-                                    <Clock className="w-3.5 h-3.5" />
-                                    <span className="font-medium whitespace-nowrap">{loc.time}</span>
-                                  </div>
-                                )}
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  {isAccommodation ? (
-                                    <Home className="w-4 h-4 text-purple-500" />
-                                  ) : (
-                                    <Clock className="w-4 h-4 text-orange-500" />
-                                  )}
-                                  <span className="whitespace-nowrap">
-                                    {isAccommodation ? '入住' : '访问'}：
-                                    <span className="font-medium bg-gray-50 px-1.5 sm:px-2 py-0.5 rounded text-gray-700 mx-1">--:--</span>
-                                    -
-                                    <span className="font-medium bg-gray-50 px-1.5 sm:px-2 py-0.5 rounded text-gray-700 mx-1">--:--</span>
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {canEdit && (
-                              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-col sm:flex-row gap-1 sm:gap-2">
-                                <button onClick={() => openEditLocation(loc)} className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-colors" title="编辑">
-                                  <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                </button>
-                                <button onClick={() => duplicateLocation(loc)} className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-gray-300 hover:text-green-500 hover:bg-green-50 rounded-full transition-colors" title="复制">
-                                  <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                </button>
-                                <button onClick={() => confirmDeleteLocation(loc.id)} className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="删除">
-                                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Reordering Controls */}
-                          {canEdit && (
-                            <div className="flex justify-end gap-1.5 mt-2 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-50">
-                              <button 
-                                onClick={() => reorderItem(index, -1)}
-                                disabled={index === 0}
-                                className={`p-1.5 sm:p-2 rounded-lg transition-colors ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-orange-50 hover:text-orange-600'}`}
-                                title="上移"
-                              >
-                                <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" />
-                              </button>
-                              <button 
-                                onClick={() => reorderItem(index, 1)}
-                                disabled={isLast}
-                                className={`p-1.5 sm:p-2 rounded-lg transition-colors ${isLast ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-orange-50 hover:text-orange-600'}`}
-                                title="下移"
-                              >
-                                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  }
+                  if (item.itemType === 'transport_departure') {
                   const t = item as any;
                   const isFlight = t.type === 'flight' || t.type === '航班';
                   const isExpanded = expandedCards.has(`trans-dep-${t.id}`);
@@ -1182,14 +1108,14 @@ export const PlanTrip: React.FC = () => {
                               {canEdit && (
                                 <div className="flex border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white h-8">
                                   <button 
-                                    onClick={(e) => { e.stopPropagation(); handleMoveLocation(idx, 'up'); }}
+                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, -1); }}
                                     className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors border-r border-gray-200 flex items-center justify-center active:bg-orange-100"
                                     title="向上移动"
                                   >
                                     <ChevronUp className="w-4 h-4" />
                                   </button>
                                   <button 
-                                    onClick={(e) => { e.stopPropagation(); handleMoveLocation(idx, 'down'); }}
+                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, 1); }}
                                     className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center justify-center active:bg-orange-100"
                                     title="向下移动"
                                   >
@@ -1338,14 +1264,14 @@ export const PlanTrip: React.FC = () => {
                             {canEdit && (
                               <div className="flex border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white h-8">
                                 <button 
-                                  onClick={(e) => { e.stopPropagation(); handleMoveLocation(idx, 'up'); }}
+                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, -1); }}
                                   className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors border-r border-gray-200 flex items-center justify-center active:bg-orange-100"
                                   title="向上移动"
                                 >
                                   <ChevronUp className="w-4 h-4" />
                                 </button>
                                 <button 
-                                  onClick={(e) => { e.stopPropagation(); handleMoveLocation(idx, 'down'); }}
+                                  onClick={(e) => { e.stopPropagation(); reorderItem(index, 1); }}
                                   className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center justify-center active:bg-orange-100"
                                   title="向下移动"
                                 >
@@ -1594,7 +1520,7 @@ export const PlanTrip: React.FC = () => {
                   
                   // Find previous location in mixed timeline
                   let prevLoc = null;
-                  for (let i = idx - 1; i >= 0; i--) {
+                  for (let i = index - 1; i >= 0; i--) {
                     if (mixedTimeline[i].itemType === 'location') {
                       prevLoc = mixedTimeline[i] as any;
                       break;
@@ -1611,7 +1537,7 @@ export const PlanTrip: React.FC = () => {
 
                   // Find if there's a next location to show the travel mode selector
                   let hasNextLoc = false;
-                  for (let i = idx + 1; i < mixedTimeline.length; i++) {
+                  for (let i = index + 1; i < mixedTimeline.length; i++) {
                     if (mixedTimeline[i].itemType === 'location') {
                       hasNextLoc = true;
                       break;
@@ -1677,14 +1603,14 @@ export const PlanTrip: React.FC = () => {
                               {canEdit && (
                                 <div className="flex border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white h-8">
                                   <button 
-                                    onClick={(e) => { e.stopPropagation(); handleMoveLocation(idx, 'up'); }}
+                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, -1); }}
                                     className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors border-r border-gray-200 flex items-center justify-center active:bg-orange-100"
                                     title="向上移动"
                                   >
                                     <ChevronUp className="w-4 h-4" />
                                   </button>
                                   <button 
-                                    onClick={(e) => { e.stopPropagation(); handleMoveLocation(idx, 'down'); }}
+                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, 1); }}
                                     className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center justify-center active:bg-orange-100"
                                     title="向下移动"
                                   >
