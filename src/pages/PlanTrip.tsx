@@ -737,7 +737,8 @@ export const PlanTrip: React.FC = () => {
             }
             .fab-position {
               left: ${sidebarWidth}px !important;
-              transform: translateX(-6rem) !important;
+              right: auto !important;
+              transform: translateX(-80px) !important;
               margin-left: 0 !important;
             }
           }
@@ -757,7 +758,7 @@ export const PlanTrip: React.FC = () => {
         </div>
 
         {/* Header - Clean White Design */}
-        <div className="p-5 border-b border-gray-100 flex items-center gap-4 bg-white">
+        <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center gap-3 sm:gap-4 bg-white">
           <button onClick={() => navigate('/')} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600">
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -775,52 +776,66 @@ export const PlanTrip: React.FC = () => {
               )}
             </div>
           </div>
-          
-          {/* Online Users Avatars */}
-          <div className="hidden md:flex items-center -space-x-2 mr-2">
-            {onlineUsers.slice(0, 3).map((ou, i) => (
-              <div 
-                key={i} 
-                className="w-8 h-8 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-blue-600 font-medium text-xs overflow-hidden z-10"
-                title={`${ou.name} (在线)`}
+
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex md:hidden items-center gap-1.5 px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+              <Users className="w-4 h-4" />
+              <span>{onlineUsers.length}</span>
+            </div>
+
+            {/* Online Users Avatars */}
+            <div className="hidden md:flex items-center -space-x-2 mr-2">
+              {onlineUsers.slice(0, 3).map((ou, i) => (
+                <div 
+                  key={i} 
+                  className="w-8 h-8 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-blue-600 font-medium text-xs overflow-hidden z-10"
+                  title={`${ou.name} (在线)`}
+                >
+                  {ou.avatar_url ? (
+                    <img src={ou.avatar_url} alt={ou.name} className="w-full h-full object-cover" />
+                  ) : (
+                    ou.name?.charAt(0)?.toUpperCase() || 'U'
+                  )}
+                </div>
+              ))}
+              {onlineUsers.length > 3 && (
+                <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-gray-600 font-medium text-xs z-0">
+                  +{onlineUsers.length - 3}
+                </div>
+              )}
+            </div>
+
+            <button 
+              onClick={() => setShowShareModal(true)} 
+              className="md:hidden p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-full transition-colors"
+              title="分享"
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => setShowShareModal(true)} 
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-full transition-colors text-sm font-medium"
+            >
+              <Share2 className="w-4 h-4" />
+              分享
+            </button>
+
+            {canEdit && (
+              <button 
+                onClick={() => {
+                  setEditTitle(title);
+                  setEditDestination(destination || '');
+                  setEditStartDate(startDate.split('T')[0]);
+                  setEditEndDate(endDate.split('T')[0]);
+                  setShowEditModal(true);
+                }} 
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-700"
+                title="编辑行程信息"
               >
-                {ou.avatar_url ? (
-                  <img src={ou.avatar_url} alt={ou.name} className="w-full h-full object-cover" />
-                ) : (
-                  ou.name?.charAt(0)?.toUpperCase() || 'U'
-                )}
-              </div>
-            ))}
-            {onlineUsers.length > 3 && (
-              <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-gray-600 font-medium text-xs z-0">
-                +{onlineUsers.length - 3}
-              </div>
+                <Settings2 className="w-5 h-5" />
+              </button>
             )}
           </div>
-
-          <button 
-            onClick={() => setShowShareModal(true)} 
-            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-full transition-colors text-sm font-medium"
-          >
-            <Share2 className="w-4 h-4" />
-            分享
-          </button>
-
-          {canEdit && (
-            <button 
-              onClick={() => {
-                setEditTitle(title);
-                setEditDestination(destination || '');
-                setEditStartDate(startDate.split('T')[0]);
-                setEditEndDate(endDate.split('T')[0]);
-                setShowEditModal(true);
-              }} 
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-700"
-              title="编辑行程信息"
-            >
-              <Settings2 className="w-5 h-5" />
-            </button>
-          )}
         </div>
 
         <div className="flex flex-1 overflow-hidden">
@@ -960,8 +975,8 @@ export const PlanTrip: React.FC = () => {
                         {/* Check-in Row */}
                         <div className="flex flex-col gap-1.5">
                           <label className="text-xs text-purple-600 font-medium">入住</label>
-                          <div className="flex flex-wrap sm:flex-nowrap gap-2">
-                            <div className="flex-1 min-w-[130px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-purple-400 transition-shadow">
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="w-full sm:flex-1 min-w-[130px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-purple-400 transition-shadow">
                               <input
                                 disabled={!canEdit}
                                 type="date"
@@ -978,7 +993,7 @@ export const PlanTrip: React.FC = () => {
                                 className="text-sm bg-transparent outline-none text-gray-700 w-full"
                               />
                             </div>
-                            <div className="flex-1 sm:flex-none sm:w-[7.5rem] min-w-[100px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-purple-400 transition-shadow">
+                            <div className="w-full sm:flex-none sm:w-[7.5rem] min-w-[100px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-purple-400 transition-shadow">
                               <input
                                 disabled={!canEdit}
                                 type="time"
@@ -1001,8 +1016,8 @@ export const PlanTrip: React.FC = () => {
                         {/* Check-out Row */}
                         <div className="flex flex-col gap-1.5">
                           <label className="text-xs text-gray-500 font-medium">退房</label>
-                          <div className="flex flex-wrap sm:flex-nowrap gap-2">
-                            <div className="flex-1 min-w-[130px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-gray-400 transition-shadow">
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="w-full sm:flex-1 min-w-[130px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-gray-400 transition-shadow">
                               <input
                                 type="date"
                                 value={currentNightAccommodation.checkOut?.split('T')[0] || ''}
@@ -1014,7 +1029,7 @@ export const PlanTrip: React.FC = () => {
                                 className="text-sm bg-transparent outline-none text-gray-700 w-full"
                               />
                             </div>
-                            <div className="flex-1 sm:flex-none sm:w-[7.5rem] min-w-[100px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-gray-400 transition-shadow">
+                            <div className="w-full sm:flex-none sm:w-[7.5rem] min-w-[100px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-gray-400 transition-shadow">
                               <input
                                 type="time"
                                 value={currentNightAccommodation.checkOut?.split('T')[1]?.substring(0, 5) || '11:00'}
@@ -1137,8 +1152,8 @@ export const PlanTrip: React.FC = () => {
                               <div className="flex flex-col gap-4">
                                 <div className="flex flex-col gap-1.5">
                                   <label className="text-xs text-gray-500 font-medium">起飞</label>
-                                  <div className="flex flex-wrap sm:flex-nowrap gap-2">
-                                    <div className="flex-1 min-w-[130px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-blue-400 transition-shadow">
+                                  <div className="flex flex-col sm:flex-row gap-2">
+                                    <div className="w-full sm:flex-1 min-w-[130px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-blue-400 transition-shadow">
                                       <input 
                                         disabled={!canEdit}
                                         type="date" 
@@ -1155,7 +1170,7 @@ export const PlanTrip: React.FC = () => {
                                         className="text-sm bg-transparent outline-none text-gray-700 w-full" 
                                       />
                                     </div>
-                                    <div className="flex-1 sm:flex-none sm:w-[7.5rem] min-w-[100px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-blue-400 transition-shadow">
+                                    <div className="w-full sm:flex-none sm:w-[7.5rem] min-w-[100px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-blue-400 transition-shadow">
                                       <input 
                                         disabled={!canEdit}
                                         type="time" 
@@ -1388,8 +1403,8 @@ export const PlanTrip: React.FC = () => {
                               <div className="flex flex-col gap-4">
                                 <div className="flex flex-col gap-1.5">
                                   <label className="text-xs text-gray-400 font-medium">降落</label>
-                                  <div className="flex flex-wrap sm:flex-nowrap gap-2">
-                                    <div className="flex-1 min-w-[130px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-blue-300 transition-shadow">
+                                  <div className="flex flex-col sm:flex-row gap-2">
+                                    <div className="w-full sm:flex-1 min-w-[130px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-blue-300 transition-shadow">
                                       <input 
                                         disabled={!canEdit}
                                         type="date" 
@@ -1402,7 +1417,7 @@ export const PlanTrip: React.FC = () => {
                                         className="text-sm bg-transparent outline-none text-gray-700 w-full" 
                                       />
                                     </div>
-                                    <div className="flex-1 sm:flex-none sm:w-[7.5rem] min-w-[100px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-blue-300 transition-shadow">
+                                    <div className="w-full sm:flex-none sm:w-[7.5rem] min-w-[100px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-blue-300 transition-shadow">
                                       <input 
                                         disabled={!canEdit}
                                         type="time" 
@@ -1719,7 +1734,7 @@ export const PlanTrip: React.FC = () => {
 
       {/* Main FAB Container - Fixed to bottom right of the screen */}
       {canEdit && (
-        <div className={`fixed bottom-6 right-6 z-[9999] flex-col items-end pointer-events-auto ${showMobileMap ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`fixed bottom-6 right-6 z-[9999] flex-col items-end pointer-events-auto fab-position ${showMobileMap ? 'hidden md:flex' : 'flex'}`}> 
           {/* Expanded Menu */}
           <div className={`absolute bottom-16 right-0 flex flex-col gap-2 items-end transition-all duration-200 ${showFabMenu ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-4 invisible'}`}>
             <button onClick={() => { resetTransportForm(); setShowAddTransport(true); }} className="flex items-center justify-end gap-3 group">
