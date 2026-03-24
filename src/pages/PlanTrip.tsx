@@ -721,7 +721,7 @@ export const PlanTrip: React.FC = () => {
 
   if (isLoadingActiveTrip) {
     return (
-      <div className="flex h-screen w-full bg-gray-50 items-center justify-center">
+      <div className="flex h-screen h-[100dvh] w-full bg-gray-50 items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -729,7 +729,7 @@ export const PlanTrip: React.FC = () => {
 
   return (
     <MapWrapper>
-      <div className="flex h-screen w-full bg-gray-50 overflow-hidden relative">
+      <div className="flex h-screen h-[100dvh] w-full bg-gray-50 overflow-hidden relative">
         <style>{`
           @media (min-width: 768px) {
             .resizable-sidebar {
@@ -1778,6 +1778,7 @@ export const PlanTrip: React.FC = () => {
             : { lat: 35.6762, lng: 139.6503 }} 
           zoom={12} 
           className="w-full h-full"
+          gestureHandling="greedy"
           mapTypeControl={false}
           streetViewControl={false}
         >
