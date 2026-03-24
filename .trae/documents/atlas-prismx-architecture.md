@@ -31,6 +31,7 @@ graph TD
 - **UI框架**: Tailwind CSS + Lucide React 图标
 - **后端**: Supabase(提供认证、数据库、存储服务)，基于 Supabase Auth 提供邮箱注册/登录机制，以及集成 Google OAuth 实现第三方快捷登录。所有子实体(航班、住宿、地点)严格保持数据库同步CRUD
 - **地图服务**: Google Maps JavaScript API + Places API (New) (使用 PlaceAutocompleteElement 实现地点自动补全与坐标获取)
+- **移动端地图交互**: 全屏地图容器采用动态视口单位(dvh)以贴合手机可视高度；地图手势使用 greedy 策略以支持单指拖动
 - **PWA支持**: Service Worker + Web App Manifest
 
 ## 3. 路由定义
