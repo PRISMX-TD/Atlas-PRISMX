@@ -55,7 +55,7 @@ export const RoutePolyline: React.FC<RoutePolylineProps> = ({
           directionsService = new window.google.maps.DirectionsService();
         } else {
           // Try to import it
-          const { DirectionsService } = await window.google.maps.importLibrary('directions') as google.maps.DirectionsLibrary;
+          const { DirectionsService } = await window.google.maps.importLibrary('directions') as any;
           if (isCancelled) return;
           directionsService = new DirectionsService();
         }
