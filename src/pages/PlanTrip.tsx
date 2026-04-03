@@ -362,7 +362,26 @@ export const PlanTrip: React.FC = () => {
     ...activeDayTransportsDeparture.map(t => ({ ...t, itemType: 'transport_departure' as const })),
     ...activeDayTransportsArrival.map(t => ({ ...t, itemType: 'transport_arrival' as const }))
   ].sort((a, b) => {
-    return (a.orderIndex || 0) - (b.orderIndex || 0);
+    // Primary sort: orderIndex
+    const aOrder = a.orderIndex ?? 0;
+    const bOrder = b.orderIndex ?? 0;
+    
+    if (aOrder !== bOrder) {
+      return aOrder - bOrder;
+    }
+    
+    // Secondary sort: Ensure departure comes before arrival for the same transport
+    if (a.id === b.id) {
+      if (a.itemType === 'transport_departure' && b.itemType === 'transport_arrival') return -1;
+      if (a.itemType === 'transport_arrival' && b.itemType === 'transport_departure') return 1;
+    }
+    
+    // Tertiary sort: location before transport if indices are same
+    if (a.itemType === 'location' && b.itemType !== 'location') return -1;
+    if (a.itemType !== 'location' && b.itemType === 'location') return 1;
+    
+    // Final fallback: stable sort by ID
+    return a.id.localeCompare(b.id);
   });
 
   // Directions state
@@ -401,22 +420,44 @@ export const PlanTrip: React.FC = () => {
   }, [activeDay, locations.length]);
 
   const handleMoveLocation = (index: number, direction: 'up' | 'down') => {
-    const newMixed = [...mixedTimeline];
+    // 1. Get the logical item being moved
+    const itemToMove = mixedTimeline[index];
+    if (!itemToMove) return;
+
+    // 2. Build a unique list of logical items for the current day
+    const logicalItems: { id: string, type: 'location' | 'transport' }[] = [];
+    const seenIds = new Set<string>();
     
-    // We can swap any item with its adjacent item
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= newMixed.length) return;
+    mixedTimeline.forEach(item => {
+      if (!seenIds.has(item.id)) {
+        seenIds.add(item.id);
+        logicalItems.push({ 
+          id: item.id, 
+          type: item.itemType === 'location' ? 'location' : 'transport' 
+        });
+      }
+    });
 
-    // Swap their positions in the mixed array
-    [newMixed[index], newMixed[targetIndex]] = [newMixed[targetIndex], newMixed[index]];
+    // 3. Find current position in logical list
+    const currentLogicalIndex = logicalItems.findIndex(u => u.id === itemToMove.id);
+    if (currentLogicalIndex === -1) return;
 
-    // Extract the new relative order and their types
-    const newOrder = newMixed.map(item => ({
-      id: item.id,
-      type: item.itemType
+    // 4. Calculate target logical position
+    const targetLogicalIndex = direction === 'up' ? currentLogicalIndex - 1 : currentLogicalIndex + 1;
+    if (targetLogicalIndex < 0 || targetLogicalIndex >= logicalItems.length) return;
+
+    // 5. Perform the swap in logical list
+    const newLogicalList = [...logicalItems];
+    const [movedItem] = newLogicalList.splice(currentLogicalIndex, 1);
+    newLogicalList.splice(targetLogicalIndex, 0, movedItem);
+
+    // 6. Map back to the store format
+    const newOrder = newLogicalList.map(u => ({
+      id: u.id,
+      type: u.type === 'location' ? 'location' as const : 'transport_departure' as const
     }));
 
-    // Save the new order to the store/DB
+    // 7. Update store
     reorderMixedTimeline(activeDay, newOrder);
   };
 
@@ -449,6 +490,7 @@ export const PlanTrip: React.FC = () => {
     setLocLat(loc.lat);
     setLocLng(loc.lng);
     setLocPlaceId(loc.placeId || null);
+    setLocMapUrl(loc.mapUrl || '');
     setShowAddLocation(true);
   };
 
@@ -520,6 +562,7 @@ export const PlanTrip: React.FC = () => {
   const [locLat, setLocLat] = useState<number | null>(null);
   const [locLng, setLocLng] = useState<number | null>(null);
   const [locPlaceId, setLocPlaceId] = useState<string | null>(null);
+  const [locMapUrl, setLocMapUrl] = useState('');
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -539,7 +582,7 @@ export const PlanTrip: React.FC = () => {
   };
 
   const resetLocationForm = () => {
-    setLocName(''); setLocAddress(''); setLocLat(null); setLocLng(null); setLocPlaceId(null); setEditingId(null);
+    setLocName(''); setLocAddress(''); setLocLat(null); setLocLng(null); setLocPlaceId(null); setLocMapUrl(''); setEditingId(null);
   };
 
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
@@ -702,7 +745,8 @@ export const PlanTrip: React.FC = () => {
         lng: locLng ?? (139.6503 + (Math.random() - 0.5) * 0.1),
         address: locAddress,
         placeId: locPlaceId || undefined,
-        dayIndex: activeDay
+        dayIndex: activeDay,
+        mapUrl: locMapUrl || undefined
       });
     } else {
       await addLocation({
@@ -711,7 +755,8 @@ export const PlanTrip: React.FC = () => {
         lng: locLng ?? (139.6503 + (Math.random() - 0.5) * 0.1),
         address: locAddress,
         placeId: locPlaceId || undefined,
-        dayIndex: activeDay
+        dayIndex: activeDay,
+        mapUrl: locMapUrl || undefined
       });
     }
     setShowAddLocation(false);
@@ -1601,7 +1646,19 @@ export const PlanTrip: React.FC = () => {
                           
                           {/* Title and Address */}
                           <h3 className="font-bold text-gray-900 pr-24 text-lg leading-tight mb-1 truncate" title={l.name}>{l.name}</h3>
-                          {l.address && <p className="text-sm text-gray-500 pr-24 leading-relaxed mb-3 line-clamp-2" title={l.address}>{l.address}</p>}
+                          {l.address && <p className="text-sm text-gray-500 pr-24 leading-relaxed mb-1 line-clamp-2" title={l.address}>{l.address}</p>}
+                          {l.mapUrl && (
+                            <a 
+                              href={l.mapUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors mb-3 relative z-20"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Navigation className="w-3 h-3" />
+                              查看 Google Maps
+                            </a>
+                          )}
 
                           {/* Time, Sort, and Expand Toggle Row */}
                           <div className="flex flex-wrap items-center justify-between mt-auto pt-2 gap-2">
@@ -2144,11 +2201,42 @@ export const PlanTrip: React.FC = () => {
             <form onSubmit={handleAddLocation} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">地点名称</label>
-                <input type="text" required value={locName} onChange={e => setLocName(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" />
+                <PlacesSearchBox 
+                  apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+                  placeholder="搜索地点..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus-within:ring-2 focus-within:ring-orange-500 bg-white"
+                  defaultValue={locName}
+                  onChange={(val) => setLocName(val)}
+                  onSelect={(place) => {
+                    if (place.name) setLocName(place.name);
+                    if (place.formatted_address) setLocAddress(place.formatted_address);
+                    if (place.place_id) setLocPlaceId(place.place_id);
+                    if (place.geometry?.location) {
+                      setLocLat(typeof place.geometry.location.lat === 'function' ? place.geometry.location.lat() : place.geometry.location.lat as any);
+                      setLocLng(typeof place.geometry.location.lng === 'function' ? place.geometry.location.lng() : place.geometry.location.lng as any);
+                    }
+                  }}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">详细地址 (可选)</label>
-                <input type="text" value={locAddress} onChange={e => setLocAddress(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" />
+                <input 
+                  type="text" 
+                  value={locAddress} 
+                  onChange={e => setLocAddress(e.target.value)} 
+                  placeholder="手动输入详细地址..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Google Maps 链接 (可选)</label>
+                <input 
+                  type="url" 
+                  value={locMapUrl} 
+                  onChange={e => setLocMapUrl(e.target.value)} 
+                  placeholder="https://maps.app.goo.gl/..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" 
+                />
               </div>
               <button type="submit" className="w-full py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 font-medium">{editingId ? '保存修改' : '确认添加'}</button>
             </form>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MapPin, Search, X } from 'lucide-react';
 
 import { supabase } from '../../supabase/client';
@@ -18,6 +18,8 @@ type PlacesSearchBoxProps = {
   className?: string;
   onSelect: (place: google.maps.places.PlaceResult, extra?: { photoUrl?: string }) => void;
   types?: string[]; // E.g. ['airport'], ['transit_station']
+  defaultValue?: string;
+  onChange?: (value: string) => void;
 };
 
 const toLegacyPlaceResult = (p: PlacesSearchResult): google.maps.places.PlaceResult => {
@@ -41,15 +43,18 @@ const toLegacyPlaceResult = (p: PlacesSearchResult): google.maps.places.PlaceRes
   } as any;
 };
 
-export const PlacesSearchBox: React.FC<PlacesSearchBoxProps> = ({
-  apiKey,
-  placeholder = '搜索地点并添加到行程…',
-  className = '',
-  onSelect,
-  types = []
-}) => {
-  const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+export const PlacesSearchBox: React.FC<PlacesSearchBoxProps> = (props) => {
+  const {
+    apiKey, 
+    placeholder = "搜索地点...", 
+    className = "",
+    onSelect,
+    types = [],
+    defaultValue = ''
+  } = props;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [query, setQuery] = useState(defaultValue);
+  const [debouncedQuery, setDebouncedQuery] = useState(defaultValue);
   const [results, setResults] = useState<PlacesSearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,6 +62,13 @@ export const PlacesSearchBox: React.FC<PlacesSearchBoxProps> = ({
   const requestIdRef = useRef(0);
 
   // Debounce the input query
+  useEffect(() => {
+    if (defaultValue && query === '') {
+      setQuery(defaultValue);
+      setDebouncedQuery(defaultValue);
+    }
+  }, [defaultValue]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(query);
@@ -249,18 +261,21 @@ export const PlacesSearchBox: React.FC<PlacesSearchBoxProps> = ({
   };
 
   return (
-    <div className={`relative w-full ${className}`}>
-      <div className="flex items-center gap-2 w-full">
-        <Search className="text-gray-500 w-5 h-5 shrink-0" />
+    <div ref={containerRef} className={`relative ${className}`}>
+      <div className="flex items-center gap-2 w-full h-full">
+        <MapPin className="w-4 h-4 text-gray-400 shrink-0 ml-1" />
         <input
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
             setIsOpen(true);
+            if (props.onChange) {
+              props.onChange(e.target.value);
+            }
           }}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
-          className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder:text-gray-400 py-2"
+          className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder:text-gray-400 py-2 w-full"
         />
         {query ? (
           <button

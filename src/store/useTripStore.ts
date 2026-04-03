@@ -14,6 +14,7 @@ export interface Location {
   placeId?: string;
   travelMode?: string; // 'DRIVING', 'WALKING', 'BICYCLING', 'TRANSIT'
   time?: string;
+  mapUrl?: string;
 }
 
 export interface Transportation {
@@ -628,7 +629,8 @@ export const useTripStore = create<TripState>()(
               orderIndex: l.order_index || 0,
               placeId: customData.placeId,
               travelMode: customData.travelMode || 'TRANSIT',
-              time: customData.time
+              time: customData.time,
+              mapUrl: customData.mapUrl
             };
           });
 
@@ -724,7 +726,10 @@ export const useTripStore = create<TripState>()(
         if (!state.activeTripId) return;
 
         const newId = uuidv4();
-        const orderIndex = state.locations.filter(l => l.dayIndex === location.dayIndex).length;
+        // Count both locations and transportations for a proper sequential orderIndex
+        const locCount = state.locations.filter(l => l.dayIndex === location.dayIndex).length;
+        const transCount = state.transportations.filter(t => t.dayIndex === location.dayIndex).length;
+        const orderIndex = locCount + transCount;
         
         const newLocation = { ...location, id: newId, orderIndex, travelMode: location.travelMode || 'TRANSIT', time: location.time };
         set({ locations: [...state.locations, newLocation] });
@@ -742,7 +747,9 @@ export const useTripStore = create<TripState>()(
             custom_data: { 
               travelMode: location.travelMode || 'TRANSIT',
               placeId: location.placeId || null,
-              time: location.time || null
+              time: location.time || null,
+              photoUrl: (location as any).photoUrl || null,
+              mapUrl: (location as any).mapUrl || null
             }
           });
         } catch (e) {
@@ -775,12 +782,14 @@ export const useTripStore = create<TripState>()(
           if (updates.dayIndex !== undefined) dbUpdates.day_index = updates.dayIndex;
           if (updates.orderIndex !== undefined) dbUpdates.order_index = updates.orderIndex;
           
-          if (updates.travelMode !== undefined || updates.placeId !== undefined || updates.time !== undefined) {
+          if (updates.travelMode !== undefined || updates.placeId !== undefined || updates.time !== undefined || (updates as any).photoUrl !== undefined || (updates as any).mapUrl !== undefined) {
             const current = prev.find(l => l.id === id);
             dbUpdates.custom_data = {
               travelMode: updates.travelMode ?? current?.travelMode ?? 'TRANSIT',
               placeId: updates.placeId ?? current?.placeId ?? null,
-              time: updates.time ?? current?.time ?? null
+              time: updates.time ?? current?.time ?? null,
+              photoUrl: (updates as any).photoUrl ?? (current as any)?.photoUrl ?? null,
+              mapUrl: (updates as any).mapUrl ?? (current as any)?.mapUrl ?? null
             };
           }
           
@@ -842,55 +851,63 @@ export const useTripStore = create<TripState>()(
       
       reorderMixedTimeline: async (dayIndex, reorderedItems) => {
         const state = get();
-        const locations = [...state.locations];
-        const transportations = [...state.transportations];
         
-        // Arrays to hold the thenables for DB updates (supabase-js builders are PromiseLike)
-        const updatePromises: PromiseLike<any>[] = [];
-
-        // We assign a continuous orderIndex based on the array position
+        // Use maps to store new indices for immutable updates
+        const locationIndices = new Map<string, number>();
+        const transportIndices = new Map<string, number>();
+        
         reorderedItems.forEach((item, index) => {
           if (item.type === 'location') {
-            const loc = locations.find(l => l.id === item.id);
-            if (loc) {
-              loc.orderIndex = index;
-              loc.dayIndex = dayIndex;
-              updatePromises.push(
-                supabase.from('locations').update({
-                  order_index: index,
-                  day_index: dayIndex
-                }).eq('id', item.id)
-              );
-            }
-          } else if (item.type === 'transport_departure' || item.type === 'transport_arrival') {
-            // Note: Since transport has both dep and arr, we only update orderIndex if it's the departure
-            // Or we could save it to the DB. For simplicity, we save it to the transport record.
-            const trans = transportations.find(t => t.id === item.id);
-            if (trans) {
-              trans.orderIndex = index;
-              trans.dayIndex = dayIndex;
-              updatePromises.push(
-                supabase.from('transportations').update({
-                  order_index: index,
-                  day_index: dayIndex
-                }).eq('id', item.id)
-              );
-            }
+            locationIndices.set(item.id, index);
+          } else {
+            transportIndices.set(item.id, index);
           }
         });
+
+        // Arrays to hold DB updates
+        const updatePromises: PromiseLike<any>[] = [];
+
+        // Immutable update for locations
+        const newLocations = state.locations.map(loc => {
+          if (locationIndices.has(loc.id)) {
+            const newIndex = locationIndices.get(loc.id)!;
+            updatePromises.push(
+              supabase.from('locations').update({
+                order_index: newIndex,
+                day_index: dayIndex
+              }).eq('id', loc.id)
+            );
+            return { ...loc, orderIndex: newIndex, dayIndex };
+          }
+          return loc;
+        });
+
+        // Immutable update for transportations
+        const newTransportations = state.transportations.map(trans => {
+          if (transportIndices.has(trans.id)) {
+            const newIndex = transportIndices.get(trans.id)!;
+            updatePromises.push(
+              supabase.from('transportations').update({
+                order_index: newIndex,
+                day_index: dayIndex
+              }).eq('id', trans.id)
+            );
+            return { ...trans, orderIndex: newIndex, dayIndex };
+          }
+          return trans;
+        });
         
-        // Update local state immediately for snappy UI
-        set({ locations, transportations });
+        // Update local state immediately with new object references
+        set({ locations: newLocations, transportations: newTransportations });
         
-        // Sync to DB
         try {
           const results = await Promise.all(updatePromises);
-
           const errors = results.filter((r: any) => r?.error).map((r: any) => r.error);
           if (errors.length > 0) {
             throw errors[0];
           }
-        } catch (e) {
+        } catch (error) {
+          console.error('Error reordering timeline:', error);
           if (state.activeTripId) {
             get().fetchTripDetails(state.activeTripId);
           }
@@ -902,9 +919,15 @@ export const useTripStore = create<TripState>()(
         if (!state.activeTripId) return;
 
         const newId = uuidv4();
+        // Count both locations and transportations for a proper sequential orderIndex
+        const locCount = state.locations.filter(l => l.dayIndex === transport.dayIndex).length;
+        const transCount = state.transportations.filter(t => t.dayIndex === transport.dayIndex).length;
+        const orderIndex = locCount + transCount;
+
         const newTransport = { 
           ...transport, 
           id: newId,
+          orderIndex,
           // Make sure local state gets the lat/lng immediately without waiting for refresh
           depLat: transport.depLat,
           depLng: transport.depLng,
@@ -947,6 +970,7 @@ export const useTripStore = create<TripState>()(
             departure_time: depTimeStr,
             arrival_time: arrTimeStr,
             day_index: transport.dayIndex,
+            order_index: orderIndex,
             custom_data: {
               flightNumber: transport.flightNumber || null,
               terminal: transport.terminal || null,

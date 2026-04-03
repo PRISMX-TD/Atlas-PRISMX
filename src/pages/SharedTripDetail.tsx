@@ -348,10 +348,22 @@ export const SharedTripDetail: React.FC = () => {
                                      isTransportArr ? item.arrival_location : 
                                      item.name}
                                   </h3>
-                                  {(item.address || (isAccommodation && item.address)) && (
-                                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                                  {item.address && (
+                                    <p className="text-sm text-gray-500 leading-relaxed line-clamp-2" title={item.address}>
                                       {item.address}
                                     </p>
+                                  )}
+                                  {item.custom_data?.mapUrl && (
+                                    <a 
+                                      href={item.custom_data.mapUrl} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors mt-2 relative z-20"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <Navigation className="w-3 h-3" />
+                                      查看 Google Maps
+                                    </a>
                                   )}
                                 </div>
                               </div>
