@@ -177,11 +177,10 @@ export const SharedTripDetail: React.FC = () => {
   const currentDayDate = addDays(new Date(startDate), activeDay);
 
   // Get items for the current day
-  const dayLocations = locations.filter((l: any) => l.day_index === activeDay).map((l: any) => ({
-    ...l, 
+  const dayLocations = locations.filter((l: any) => l.dayIndex === activeDay).map((l: any) => ({
+    ...l,
     type: 'location',
-    time: l.custom_data?.time,
-    travelMode: l.custom_data?.travelMode || 'TRANSIT'
+    order_index: l.orderIndex
   }));
   
   const dayTransports = transportations.filter((t: any) => t.day_index === activeDay).flatMap((t: any) => {
@@ -202,7 +201,8 @@ export const SharedTripDetail: React.FC = () => {
         ...t,
         type: 'transport_arrival',
         order_index: t.order_index + 0.1,
-        time: arrTimeStr ? arrTimeStr.split('T')[1] : undefined
+        time: arrTimeStr ? arrTimeStr.split('T')[1] : undefined,
+        travelMode: t.custom_data?.travelMode || 'TRANSIT'
       });
     }
     return res;
@@ -413,13 +413,18 @@ export const SharedTripDetail: React.FC = () => {
                 />
               ))}
               <RoutePolyline
-                locations={dayLocations.map((l: any) => ({
-                  lat: l.latitude, 
-                  lng: l.longitude, 
-                  placeId: l.custom_data?.placeId, 
-                  travelMode: l.travelMode, 
-                  time: l.time
-                }))}
+                locations={allDayItems.map((item: any) => {
+                  if (item.type === 'location') {
+                    return { lat: item.lat, lng: item.lng, placeId: item.placeId, travelMode: item.travelMode, time: item.time };
+                  } else if (item.type === 'transport_departure') {
+                    const isFlight = item.type === 'flight' || item.type === '航班';
+                    return { lat: item.depLat, lng: item.depLng, travelMode: item.travelMode || 'TRANSIT', time: item.time, skipToNext: isFlight };
+                  } else if (item.type === 'transport_arrival') {
+                    return { lat: item.arrLat, lng: item.arrLng, travelMode: item.travelMode || 'TRANSIT', time: item.time };
+                  }
+                  return null;
+                }).filter((p: any) => p !== null && p.lat !== undefined && p.lng !== undefined) as any}
+                baseDate={currentDayDate}
               />
             </Map>
           </MapWrapper>

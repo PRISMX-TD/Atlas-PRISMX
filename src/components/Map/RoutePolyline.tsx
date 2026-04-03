@@ -6,12 +6,14 @@ interface LocationWithMode {
   placeId?: string;
   travelMode?: string;
   time?: string;
+  skipToNext?: boolean; // New flag to skip drawing route to the next point (e.g. during a flight)
 }
 
 interface RoutePolylineProps {
   map?: google.maps.Map;
   locations: LocationWithMode[];
   color?: string;
+  baseDate?: Date;
   onRouteCalculated?: (result: any) => void;
 }
 
@@ -19,6 +21,7 @@ export const RoutePolyline: React.FC<RoutePolylineProps> = ({
   map, 
   locations, 
   color = '#3B82F6',
+  baseDate,
   onRouteCalculated 
 }) => {
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
@@ -27,21 +30,9 @@ export const RoutePolyline: React.FC<RoutePolylineProps> = ({
   const locationsString = JSON.stringify(locations);
 
   useEffect(() => {
-    if (!map || !window.google) return;
+    if (!map || !window.google || !window.google.maps) return;
 
-    // Load the routes library if not already loaded
-    const loadRoutesLibrary = async () => {
-      if (routesLibraryLoadedRef.current) return true;
-      try {
-        // @ts-ignore - routes library types may not be fully available
-        await window.google.maps.importLibrary('routes');
-        routesLibraryLoadedRef.current = true;
-        return true;
-      } catch (e) {
-        console.error('[DEBUG] Failed to load routes library:', e);
-        return false;
-      }
-    };
+    let isCancelled = false;
 
     // Clean up existing polylines
     polylinesRef.current.forEach(p => p.setMap(null));
@@ -55,90 +46,171 @@ export const RoutePolyline: React.FC<RoutePolylineProps> = ({
     }
 
     const calculateRoutes = async () => {
-      const libraryLoaded = await loadRoutesLibrary();
-      if (!libraryLoaded) {
-        console.error('[DEBUG] Routes library not available, falling back to straight lines');
-        drawFallbackLines(locations);
-        return;
+      // 1. Try to get DirectionsService
+      let directionsService: google.maps.DirectionsService | null = null;
+      
+      try {
+        // First check if it's already available globally
+        if (window.google?.maps?.DirectionsService) {
+          directionsService = new window.google.maps.DirectionsService();
+        } else {
+          // Try to import it
+          const { DirectionsService } = await window.google.maps.importLibrary('directions') as google.maps.DirectionsLibrary;
+          if (isCancelled) return;
+          directionsService = new DirectionsService();
+        }
+      } catch (e) {
+        console.warn('[DEBUG] Directions library failed to load, trying fallback', e);
       }
 
-      // @ts-ignore - routes library types may not be fully available
-      const Route = window.google.maps.routes.Route;
-      let totalPolylines: google.maps.Polyline[] = [];
-      let allSuccessful = true;
+      // 2. Try to get Routes library
+      let routesLibrary: any = null;
+      try {
+        routesLibrary = await window.google.maps.importLibrary('routes');
+      } catch (e) {
+        console.warn('[DEBUG] Routes library failed to load');
+      }
+
+      const Route = routesLibrary?.Route;
+      let totalDistance = 0;
+      let totalDuration = 0;
 
       for (let i = 0; i < locations.length - 1; i++) {
+        if (isCancelled) return;
         const origin = locations[i];
         const destination = locations[i + 1];
-        if (origin.lat === destination.lat && origin.lng === destination.lng) {
-          continue;
-        }
+        if (origin.lat === destination.lat && origin.lng === destination.lng) continue;
+        if (origin.skipToNext) continue; // Skip flight segments or other explicitly marked segments
 
         const travelMode = origin.travelMode || 'TRANSIT';
+        let routeFound = false;
 
-        const originLocation = { lat: origin.lat, lng: origin.lng };
-        const destinationLocation = { lat: destination.lat, lng: destination.lng };
-
-        try {
-          console.log('[DEBUG] Requesting route with new API, segment', i, 'travelMode:', travelMode);
-
-          const request: any = {
-            origin: originLocation,
-            destination: destinationLocation,
-            travelMode,
-            fields: ['path'],
-          };
-
-          if (travelMode === 'TRANSIT') {
-            request.transitPreference = {
-              routingPreference: 'LESS_WALKING'
-            };
+        // --- TRY DIRECTIONS SERVICE (Best for Transit) ---
+        if (directionsService) {
+          try {
+            const depDate = baseDate ? new Date(baseDate) : new Date();
             if (origin.time) {
               const [hours, minutes] = origin.time.split(':');
-              const now = new Date();
-              now.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-              request.departureTime = now;
+              depDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
             } else {
-              request.departureTime = new Date();
+              depDate.setHours(9, 0, 0, 0);
             }
-          }
 
-          const result = await Route.computeRoutes(request);
-          console.log('[DEBUG] Route API result:', JSON.stringify(result).slice(0, 500));
+            const dsOrigin = origin.placeId ? { placeId: origin.placeId } : { lat: origin.lat, lng: origin.lng };
+            const dsDest = destination.placeId ? { placeId: destination.placeId } : { lat: destination.lat, lng: destination.lng };
 
-          if (result.routes && result.routes.length > 0) {
-            // Use createPolylines to get the actual polylines
-            const routePolylines = result.routes[0].createPolylines();
-            
-            for (const polyline of routePolylines) {
-              // Set the color appropriately
-              polyline.setOptions({
+            const dsRequest: google.maps.DirectionsRequest = {
+              origin: dsOrigin,
+              destination: dsDest,
+              travelMode: travelMode as google.maps.TravelMode,
+            };
+
+            if (travelMode === 'TRANSIT') {
+              dsRequest.transitOptions = {
+                departureTime: depDate,
+                routingPreference: google.maps.TransitRoutePreference.LESS_WALKING
+              };
+            }
+
+            let dsResult = await new Promise<google.maps.DirectionsResult | null>((resolve) => {
+              directionsService!.route(dsRequest, (result, status) => {
+                if (status === google.maps.DirectionsStatus.OK) {
+                  resolve(result);
+                } else {
+                  resolve(null);
+                }
+              });
+            });
+
+            // Fallback: If Transit returns ZERO_RESULTS, try Walking
+            if (!dsResult && travelMode === 'TRANSIT') {
+              console.log(`[DEBUG] Transit returned ZERO_RESULTS for segment ${i}, trying WALKING fallback...`);
+              dsResult = await new Promise<google.maps.DirectionsResult | null>((resolve) => {
+                directionsService!.route({
+                  origin: dsOrigin,
+                  destination: dsDest,
+                  travelMode: google.maps.TravelMode.WALKING
+                }, (result, status) => {
+                  if (status === google.maps.DirectionsStatus.OK) resolve(result);
+                  else resolve(null);
+                });
+              });
+            }
+
+            if (isCancelled) return;
+
+            if (dsResult && dsResult.routes && dsResult.routes.length > 0) {
+              const route = dsResult.routes[0];
+              const polyline = new window.google.maps.Polyline({
+                path: route.overview_path,
                 strokeColor: color,
                 strokeOpacity: 0.9,
                 strokeWeight: 5,
+                map: map
               });
-              polyline.setMap(map);
               polylinesRef.current.push(polyline);
-              totalPolylines.push(polyline);
+              
+              if (route.legs) {
+                route.legs.forEach(leg => {
+                  totalDistance += leg.distance?.value || 0;
+                  totalDuration += leg.duration?.value || 0;
+                });
+              }
+              routeFound = true;
+              console.log(`[DEBUG] Segment ${i} found via DirectionsService (${dsResult.request.travelMode})`);
             }
-
-            // If we got polylines, we're done for this segment
-            if (totalPolylines.length > 0) continue;
+          } catch (e) {
+            console.warn(`[DEBUG] DirectionsService error for segment ${i}:`, e);
           }
+        }
 
-          // If we get here with no polylines, try fallback
-          allSuccessful = false;
-          drawSegmentLine(origin, destination, '#9CA3AF');
+        // --- TRY ROUTES API (FALLBACK for non-transit or if DS completely failed) ---
+        if (!routeFound && Route) {
+          try {
+            // Simplified request to avoid "unknown property placeId" or other SDK mismatch errors
+            const request: any = {
+              origin: { location: { latLng: { latitude: origin.lat, longitude: origin.lng } } },
+              destination: { location: { latLng: { latitude: destination.lat, longitude: destination.lng } } },
+              travelMode: travelMode === 'TRANSIT' ? 'WALK' : travelMode, // Routes API uses WALK instead of WALKING
+              fields: ['path', 'distanceMeters', 'duration'],
+            };
 
-        } catch (error) {
-          console.error('[DEBUG] Route API error for segment', i, ':', error);
-          allSuccessful = false;
+            const result = await Route.computeRoutes(request);
+            if (isCancelled) return;
+
+            if (result.routes && result.routes.length > 0) {
+              const route = result.routes[0];
+              const routePolylines = route.createPolylines();
+              for (const p of routePolylines) {
+                p.setOptions({ strokeColor: color, strokeOpacity: 0.9, strokeWeight: 5 });
+                p.setMap(map);
+                polylinesRef.current.push(p);
+              }
+              totalDistance += route.distanceMeters || 0;
+              if (route.duration) {
+                totalDuration += parseInt(route.duration.replace('s', ''), 10) || 0;
+              }
+              routeFound = true;
+              console.log(`[DEBUG] Segment ${i} found via Routes API fallback`);
+            }
+          } catch (e) {
+            // Silently fail
+          }
+        }
+
+        // --- FALLBACK TO STRAIGHT LINE ---
+        if (!routeFound && !isCancelled) {
           drawSegmentLine(origin, destination, '#9CA3AF');
         }
       }
 
-      if (onRouteCalculated && totalPolylines.length > 0) {
-        onRouteCalculated({ routes: [{ polylines: totalPolylines }] });
+      if (onRouteCalculated && !isCancelled) {
+        onRouteCalculated({ 
+          routes: [{ 
+            distanceMeters: totalDistance,
+            durationMillis: totalDuration * 1000
+          }] 
+        });
       }
     };
 
@@ -167,6 +239,7 @@ export const RoutePolyline: React.FC<RoutePolylineProps> = ({
     calculateRoutes();
 
     return () => {
+      isCancelled = true;
       polylinesRef.current.forEach(p => p.setMap(null));
       polylinesRef.current = [];
     };

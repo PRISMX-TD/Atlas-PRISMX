@@ -34,6 +34,7 @@ export interface Transportation {
   depLng?: number;
   arrLat?: number;
   arrLng?: number;
+  travelMode?: string; // 'DRIVING', 'WALKING', 'BICYCLING', 'TRANSIT'
   custom_data?: any;
 }
 
@@ -666,7 +667,8 @@ export const useTripStore = create<TripState>()(
               depLat: customData.depLat,
               depLng: customData.depLng,
               arrLat: customData.arrLat,
-              arrLng: customData.arrLng
+              arrLng: customData.arrLng,
+              travelMode: customData.travelMode || 'TRANSIT'
             };
           });
 
@@ -1037,7 +1039,8 @@ export const useTripStore = create<TripState>()(
           // Handle custom data fields
           if (updates.flightNumber !== undefined || updates.terminal !== undefined || updates.pnr !== undefined || 
               updates.depLat !== undefined || updates.depLng !== undefined || 
-              updates.arrLat !== undefined || updates.arrLng !== undefined) {
+              updates.arrLat !== undefined || updates.arrLng !== undefined ||
+              updates.travelMode !== undefined) {
             const current = prev.find(t => t.id === id);
             dbUpdates.custom_data = {
               ...current?.custom_data,
@@ -1047,7 +1050,8 @@ export const useTripStore = create<TripState>()(
               depLat: updates.depLat ?? current?.depLat ?? null,
               depLng: updates.depLng ?? current?.depLng ?? null,
               arrLat: updates.arrLat ?? current?.arrLat ?? null,
-              arrLng: updates.arrLng ?? current?.arrLng ?? null
+              arrLng: updates.arrLng ?? current?.arrLng ?? null,
+              travelMode: updates.travelMode ?? current?.travelMode ?? 'TRANSIT'
             };
           }
 

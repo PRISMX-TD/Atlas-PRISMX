@@ -1381,361 +1381,204 @@ export const PlanTrip: React.FC = () => {
                   const isFlight = t.type === 'flight' || t.type === '航班';
                   const isExpanded = expandedCards.has(`trans-arr-${t.id}`);
                   
-                  if (isFlight) {
-                    return (
-                      <div key={`trans-arr-${t.id}`} className="relative flex items-start gap-4 mb-6">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full border-4 border-white bg-blue-50 text-blue-400 shadow-sm shrink-0 z-10 relative mt-2">
-                          <Plane className="w-3.5 h-3.5 rotate-90" />
-                        </div>
-                        <div className="flex-1 min-w-0 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 relative opacity-90">
-                          <div className="absolute top-3 right-3 flex gap-2">
-                            {t.arrLat && t.arrLng && (
-                              <a 
-                                href={`https://www.google.com/maps/dir/?api=1&destination=${t.arrLat},${t.arrLng}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-7 h-7 flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                                title="导航到机场"
-                              >
-                                <Navigation className="w-4 h-4" />
-                              </a>
-                            )}
+                  return (
+                    <React.Fragment key={`trans-arr-${t.id}`}>
+                      {isFlight ? (
+                        <div className="relative flex items-start gap-4 mb-6">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full border-4 border-white bg-blue-50 text-blue-400 shadow-sm shrink-0 z-10 relative mt-2">
+                            <Plane className="w-3.5 h-3.5 rotate-90" />
                           </div>
-                          
-                          <div className="text-xs font-bold text-gray-500 tracking-wider mb-1">FLIGHT ARRIVAL</div>
-                          <div className="font-bold text-gray-800 pr-16 text-lg leading-tight mb-3 truncate" title={t.arrival}>{t.arrival}</div>
-                          
-                          <div className="flex flex-wrap items-center justify-between mt-2 pt-3 border-t border-gray-50 gap-2">
-                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                              <Clock className="w-4 h-4 text-blue-300 shrink-0" />
-                              <span className="text-sm text-gray-500 font-medium shrink-0">降落：</span>
-                              <span className="text-sm text-gray-600 font-medium bg-gray-50 px-2 py-1 rounded-lg border border-gray-200">
-                                {formatTimeAMPM(t.arrivalTime?.split('T')[1]?.substring(0, 5) || '--:--')}
-                              </span>
+                          <div className="flex-1 min-w-0 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 relative opacity-90">
+                            <div className="absolute top-3 right-3 flex gap-2">
+                              {t.arrLat && t.arrLng && (
+                                <a 
+                                  href={`https://www.google.com/maps/dir/?api=1&destination=${t.arrLat},${t.arrLng}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-7 h-7 flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                  title="导航到机场"
+                                >
+                                  <Navigation className="w-4 h-4" />
+                                </a>
+                              )}
                             </div>
                             
-                            <div className="flex items-center gap-2 shrink-0 ml-auto">
-                              {/* Sort buttons for flight arrival */}
-                              {canEdit && (
-                                <div className="flex border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white h-8">
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, -1); }}
-                                    className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors border-r border-gray-200 flex items-center justify-center active:bg-orange-100"
-                                    title="向上移动"
-                                  >
-                                    <ChevronUp className="w-4 h-4" />
-                                  </button>
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, 1); }}
-                                    className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center justify-center active:bg-orange-100"
-                                    title="向下移动"
-                                  >
-                                    <ChevronDown className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              )}
-                              <button 
-                                onClick={() => toggleCardExpansion(`trans-arr-${t.id}`)}
-                                className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-400 transition-colors shadow-sm"
-                              >
-                                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                              </button>
+                            <div className="text-xs font-bold text-gray-500 tracking-wider mb-1">FLIGHT ARRIVAL</div>
+                            <div className="font-bold text-gray-800 pr-16 text-lg leading-tight mb-3 truncate" title={t.arrival}>{t.arrival}</div>
+                            
+                            <div className="flex flex-wrap items-center justify-between mt-2 pt-3 border-t border-gray-50 gap-2">
+                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                <Clock className="w-4 h-4 text-blue-300 shrink-0" />
+                                <span className="text-sm text-gray-500 font-medium shrink-0">降落：</span>
+                                <span className="text-sm text-gray-600 font-medium bg-gray-50 px-2 py-1 rounded-lg border border-gray-200">
+                                  {formatTimeAMPM(t.arrivalTime?.split('T')[1]?.substring(0, 5) || '--:--')}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center gap-2 shrink-0 ml-auto">
+                                {/* Sort buttons for flight arrival */}
+                                {canEdit && (
+                                  <div className="flex border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white h-8">
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); reorderItem(index, -1); }}
+                                      className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors border-r border-gray-200 flex items-center justify-center active:bg-orange-100"
+                                      title="向上移动"
+                                    >
+                                      <ChevronUp className="w-4 h-4" />
+                                    </button>
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); reorderItem(index, 1); }}
+                                      className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center justify-center active:bg-orange-100"
+                                      title="向下移动"
+                                    >
+                                      <ChevronDown className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                )}
+                                <button 
+                                  onClick={() => toggleCardExpansion(`trans-arr-${t.id}`)}
+                                  className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-400 transition-colors shadow-sm"
+                                >
+                                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                </button>
+                              </div>
                             </div>
-                          </div>
 
-                          {isExpanded && (
-                            <div className="mt-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
-                              <div className="flex flex-col gap-4">
-                                <div className="flex flex-col gap-1.5">
-                                  <label className="text-xs text-gray-400 font-medium">降落</label>
-                                  <div className="flex flex-col sm:flex-row gap-2">
-                                    <div className="w-full sm:flex-1 min-w-[130px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-blue-300 transition-shadow">
-                                      <input 
-                                        disabled={!canEdit}
-                                        type="date" 
-                                        value={t.arrivalTime?.split('T')[0] || ''} 
-                                        onChange={(e) => {
-                                          const date = e.target.value;
-                                          const time = t.arrivalTime?.split('T')[1] || '00:00';
-                                          updateTransportation(t.id, { arrivalTime: `${date}T${time}` });
-                                        }} 
-                                        className="text-sm bg-transparent outline-none text-gray-700 w-full" 
-                                      />
-                                    </div>
-                                    <div className="w-full sm:flex-none sm:w-[7.5rem] min-w-[100px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-blue-300 transition-shadow">
-                                      <input 
-                                        disabled={!canEdit}
-                                        type="time" 
-                                        value={t.arrivalTime?.split('T')[1]?.substring(0, 5) || ''} 
-                                        onChange={(e) => {
-                                          const time = e.target.value;
-                                          const date = t.arrivalTime?.split('T')[0] || startDate.split('T')[0];
-                                          updateTransportation(t.id, { arrivalTime: `${date}T${time}` });
-                                        }} 
-                                        className="text-sm bg-transparent outline-none font-mono text-gray-700 w-full" 
-                                      />
+                            {isExpanded && (
+                              <div className="mt-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="flex flex-col gap-4">
+                                  <div className="flex flex-col gap-1.5">
+                                    <label className="text-xs text-gray-400 font-medium">降落</label>
+                                    <div className="flex flex-col sm:flex-row gap-2">
+                                      <div className="w-full sm:flex-1 min-w-[130px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-blue-300 transition-shadow">
+                                        <input 
+                                          disabled={!canEdit}
+                                          type="date" 
+                                          value={t.arrivalTime?.split('T')[0] || ''} 
+                                          onChange={(e) => {
+                                            const date = e.target.value;
+                                            const time = t.arrivalTime?.split('T')[1] || '00:00';
+                                            updateTransportation(t.id, { arrivalTime: `${date}T${time}` });
+                                          }} 
+                                          className="text-sm bg-transparent outline-none text-gray-700 w-full" 
+                                        />
+                                      </div>
+                                      <div className="w-full sm:flex-none sm:w-[7.5rem] min-w-[100px] flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-blue-300 transition-shadow">
+                                        <input 
+                                          disabled={!canEdit}
+                                          type="time" 
+                                          value={t.arrivalTime?.split('T')[1]?.substring(0, 5) || ''} 
+                                          onChange={(e) => {
+                                            const time = e.target.value;
+                                            const date = t.arrivalTime?.split('T')[0] || startDate.split('T')[0];
+                                            updateTransportation(t.id, { arrivalTime: `${date}T${time}` });
+                                          }} 
+                                          className="text-sm bg-transparent outline-none font-mono text-gray-700 w-full" 
+                                        />
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div key={`trans-arr-${t.id}`} className="relative flex items-start gap-4 mb-6">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full border-4 border-white bg-gray-50 text-gray-400 shadow-sm shrink-0 z-10 relative mt-2">
-                        <RouteIcon className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="flex-1 min-w-0 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 relative opacity-90">
-                        <div className="absolute top-3 right-3 flex gap-2">
-                          {t.arrLat && t.arrLng && (
-                            <a 
-                              href={`https://www.google.com/maps/dir/?api=1&destination=${t.arrLat},${t.arrLng}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-7 h-7 flex items-center justify-center text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-colors"
-                              title="导航到目的地"
-                            >
-                              <Navigation className="w-3.5 h-3.5" />
-                            </a>
-                          )}
-                        </div>
-                        <div className="text-xs font-bold text-gray-500 tracking-wider mb-1">
-                          {t.type === 'train' ? '火车/高铁' : t.type === 'bus' ? '巴士' : t.type === 'driving' ? '自驾' : t.type} 到达
-                        </div>
-                        <div className="text-lg font-bold text-gray-800 pr-16 mb-3 truncate" title={t.arrival}>
-                          {t.arrival}
-                        </div>
-                        
-                        <div className="flex flex-wrap items-center justify-between mt-2 pt-3 border-t border-gray-50 gap-2">
-                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                            <Clock className="w-4 h-4 text-gray-400 shrink-0" />
-                            <span className="text-sm text-gray-600 font-medium shrink-0">到达：</span>
-                            <span className="text-sm text-gray-600 font-medium bg-gray-50 px-2 py-1 rounded-lg border border-gray-200">
-                              {formatTimeAMPM(t.arrivalTime?.split('T')[1]?.substring(0, 5) || '--:--')}
-                            </span>
-                          </div>
-                          
-                          <div className="flex items-center gap-2 shrink-0 ml-auto">
-                              {/* Sort buttons for transport arrival */}
-                              {canEdit && (
-                                <div className="flex border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white h-8">
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, -1); }}
-                                    className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors border-r border-gray-200 flex items-center justify-center active:bg-orange-100"
-                                    title="向上移动"
-                                  >
-                                    <ChevronUp className="w-4 h-4" />
-                                  </button>
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, 1); }}
-                                    className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center justify-center active:bg-orange-100"
-                                    title="向下移动"
-                                  >
-                                    <ChevronDown className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              )}
-                              <button 
-                                onClick={() => toggleCardExpansion(`trans-arr-${t.id}`)}
-                              className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-500 transition-colors shadow-sm"
-                            >
-                              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                            </button>
-                          </div>
-                        </div>
-
-                        {isExpanded && (
-                          <div className="mt-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
-                            <div className="flex flex-col gap-4">
-                              <div className="flex flex-col gap-1 min-w-0">
-                                <label className="text-xs text-gray-500 font-medium">到达日期</label>
-                                <input
-                                  type="date"
-                                  value={t.arrivalTime?.split('T')[0] || ''}
-                                  onChange={(e) => {
-                                    const date = e.target.value;
-                                    const time = t.arrivalTime?.split('T')[1] || '00:00';
-                                    updateTransportation(t.id, { arrivalTime: `${date}T${time}` });
-                                  }}
-                                  className="text-sm px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 outline-none focus:ring-1 focus:ring-gray-400 text-gray-600 w-full min-w-[140px]"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                }
-
-                if (item.itemType === 'location') {
-                  const l = item as any;
-                  // Determine travel mode from previous location to this location
-                  let navTravelMode = 'transit'; // default
-                  
-                  // Find previous location in mixed timeline
-                  let prevLoc = null;
-                  for (let i = index - 1; i >= 0; i--) {
-                    if (mixedTimeline[i].itemType === 'location') {
-                      prevLoc = mixedTimeline[i] as any;
-                      break;
-                    }
-                  }
-
-                  if (prevLoc) {
-                    const prevTravelMode = prevLoc.travelMode;
-                    if (prevTravelMode === 'DRIVING') navTravelMode = 'driving';
-                    else if (prevTravelMode === 'WALKING') navTravelMode = 'walking';
-                    else if (prevTravelMode === 'BICYCLING') navTravelMode = 'bicycling';
-                    else navTravelMode = 'transit';
-                  }
-
-                  // Find if there's a next location to show the travel mode selector
-                  let hasNextLoc = false;
-                  for (let i = index + 1; i < mixedTimeline.length; i++) {
-                    if (mixedTimeline[i].itemType === 'location') {
-                      hasNextLoc = true;
-                      break;
-                    }
-                  }
-
-                  const isExpanded = expandedCards.has(`loc-${l.id}`);
-
-                  return (
-                    <React.Fragment key={`loc-${l.id}`}>
-                      <div className="relative flex items-start gap-4 mb-6">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full border-4 border-white bg-orange-100 text-orange-600 shadow shrink-0 z-10 relative mt-2">
-                          <MapPin className="w-3.5 h-3.5" />
-                        </div>
-                        <div className="flex-1 min-w-0 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 relative flex flex-col">
-                          {/* Top Right Action Icons */}
-                          <div className="absolute top-3 right-3 flex gap-2 z-20">
-                            <a 
-                              href={`https://www.google.com/maps/dir/?api=1&destination=${l.lat},${l.lng}&travelmode=${navTravelMode}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-7 h-7 flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                              title="导航到这里"
-                            >
-                              <Navigation className="w-4 h-4" />
-                            </a>
-                            {canEdit && (
-                              <>
-                                <button 
-                                  onClick={() => openEditLocation(l)}
-                                  className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-orange-500 hover:bg-orange-50 rounded-full transition-colors"
-                                  title="编辑"
-                                >
-                                  <Edit2 className="w-3.5 h-3.5" />
-                                </button>
-                                <button 
-                                  onClick={() => confirmDeleteLocation(l.id)}
-                                  className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                                  title="删除"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </>
                             )}
                           </div>
-                          
-                          {/* Title and Address */}
-                          <h3 className="font-bold text-gray-900 pr-24 text-lg leading-tight mb-1 truncate" title={l.name}>{l.name}</h3>
-                          {l.address && <p className="text-sm text-gray-500 pr-24 leading-relaxed mb-1 line-clamp-2" title={l.address}>{l.address}</p>}
-                          {l.mapUrl && (
-                            <a 
-                              href={l.mapUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors mb-3 relative z-20"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Navigation className="w-3 h-3" />
-                              查看 Google Maps
-                            </a>
-                          )}
-
-                          {/* Time, Sort, and Expand Toggle Row */}
-                          <div className="flex flex-wrap items-center justify-between mt-auto pt-2 gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Clock className="w-4 h-4 text-orange-400 shrink-0" />
-                              <span className="text-sm text-gray-700 font-medium shrink-0">访问:</span>
-                              <span className="text-sm text-gray-600 font-medium bg-orange-50/50 px-2 py-1 rounded-lg border border-orange-100/50 shrink-0 whitespace-nowrap">
-                                {formatTimeAMPM(l.time || '--:--')}
-                              </span>
+                        </div>
+                      ) : (
+                        <div className="relative flex items-start gap-4 mb-6">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full border-4 border-white bg-gray-50 text-gray-400 shadow-sm shrink-0 z-10 relative mt-2">
+                            <RouteIcon className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="flex-1 min-w-0 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 relative opacity-90">
+                            <div className="absolute top-3 right-3 flex gap-2">
+                              {t.arrLat && t.arrLng && (
+                                <a 
+                                  href={`https://www.google.com/maps/dir/?api=1&destination=${t.arrLat},${t.arrLng}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-7 h-7 flex items-center justify-center text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-colors"
+                                  title="导航到目的地"
+                                >
+                                  <Navigation className="w-3.5 h-3.5" />
+                                </a>
+                              )}
+                            </div>
+                            <div className="text-xs font-bold text-gray-500 tracking-wider mb-1">
+                              {t.type === 'train' ? '火车/高铁' : t.type === 'bus' ? '巴士' : t.type === 'driving' ? '自驾' : t.type} 到达
+                            </div>
+                            <div className="text-lg font-bold text-gray-800 pr-16 mb-3 truncate" title={t.arrival}>
+                              {t.arrival}
                             </div>
                             
-                            <div className="flex items-center gap-2 shrink-0 z-30 ml-auto">
-                              {/* Sort buttons moved out of expanded view for easy access */}
-                              {canEdit && (
-                                <div className="flex border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white h-8">
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, -1); }}
-                                    className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors border-r border-gray-200 flex items-center justify-center active:bg-orange-100"
-                                    title="向上移动"
-                                  >
-                                    <ChevronUp className="w-4 h-4" />
-                                  </button>
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); reorderItem(index, 1); }}
-                                    className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center justify-center active:bg-orange-100"
-                                    title="向下移动"
-                                  >
-                                    <ChevronDown className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              )}
+                            <div className="flex flex-wrap items-center justify-between mt-2 pt-3 border-t border-gray-50 gap-2">
+                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                <Clock className="w-4 h-4 text-gray-400 shrink-0" />
+                                <span className="text-sm text-gray-600 font-medium shrink-0">到达：</span>
+                                <span className="text-sm text-gray-600 font-medium bg-gray-50 px-2 py-1 rounded-lg border border-gray-200">
+                                  {formatTimeAMPM(t.arrivalTime?.split('T')[1]?.substring(0, 5) || '--:--')}
+                                </span>
+                              </div>
                               
-                              {/* Toggle Expansion Button */}
-                              <button 
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toggleCardExpansion(`loc-${l.id}`);
-                                }}
-                                className="flex items-center justify-center w-8 h-8 bg-orange-50 hover:bg-orange-100 rounded-lg text-orange-600 transition-colors shadow-sm"
-                              >
-                                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                              </button>
+                              <div className="flex items-center gap-2 shrink-0 ml-auto">
+                                {/* Sort buttons for transport arrival */}
+                                {canEdit && (
+                                  <div className="flex border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white h-8">
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); reorderItem(index, -1); }}
+                                      className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors border-r border-gray-200 flex items-center justify-center active:bg-orange-100"
+                                      title="向上移动"
+                                    >
+                                      <ChevronUp className="w-4 h-4" />
+                                    </button>
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); reorderItem(index, 1); }}
+                                      className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center justify-center active:bg-orange-100"
+                                      title="向下移动"
+                                    >
+                                      <ChevronDown className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                )}
+                                <button 
+                                  onClick={() => toggleCardExpansion(`trans-arr-${t.id}`)}
+                                  className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-500 transition-colors shadow-sm"
+                                >
+                                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                </button>
+                              </div>
                             </div>
-                          </div>
 
-                          {/* Expanded Content */}
-                          {isExpanded && (
-                            <div className="mt-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200 relative z-30">
-                              <div className="flex flex-col gap-4">
-                                <div className="flex flex-col gap-1.5">
-                                  <label className="text-xs text-orange-600 font-medium">访问时间</label>
-                                  <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-orange-400 transition-shadow w-full">
+                            {isExpanded && (
+                              <div className="mt-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="flex flex-col gap-4">
+                                  <div className="flex flex-col gap-1 min-w-0">
+                                    <label className="text-xs text-gray-500 font-medium">到达日期</label>
                                     <input
-                                      disabled={!canEdit}
-                                      type="time"
-                                      value={l.time || ''}
-                                      onChange={(e) => updateLocation(l.id, { time: e.target.value })}
-                                      className="text-sm bg-transparent outline-none font-mono text-gray-700 w-full"
+                                      type="date"
+                                      value={t.arrivalTime?.split('T')[0] || ''}
+                                      onChange={(e) => {
+                                        const date = e.target.value;
+                                        const time = t.arrivalTime?.split('T')[1] || '00:00';
+                                        updateTransportation(t.id, { arrivalTime: `${date}T${time}` });
+                                      }}
+                                      className="text-sm px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 outline-none focus:ring-1 focus:ring-gray-400 text-gray-600 w-full min-w-[140px]"
                                     />
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
                       
-                      {/* Travel Mode to next location */}
-                      {hasNextLoc && (
+                      {/* Travel Mode to next point after arrival */}
+                      {index < mixedTimeline.length - 1 && (
                         <div className="relative flex items-center gap-4 mb-6">
                           <div className="w-8 shrink-0 z-10 flex justify-center relative">
                             <div className="bg-white border border-gray-200 rounded-full shadow-sm p-1 flex">
                               <select 
                                 disabled={!canEdit}
-                                value={l.travelMode || 'TRANSIT'}
-                                onChange={(e) => updateLocation(l.id, { travelMode: e.target.value })}
+                                value={t.travelMode || 'TRANSIT'}
+                                onChange={(e) => updateTransportation(t.id, { travelMode: e.target.value })}
                                 className="text-xs text-gray-600 bg-transparent outline-none cursor-pointer appearance-none text-center pl-1 pr-2"
                                 title="前往下一地点的出行方式"
                               >
@@ -1746,12 +1589,187 @@ export const PlanTrip: React.FC = () => {
                               </select>
                             </div>
                           </div>
-                          <div className="flex-1"></div>
+                          <div className="flex-1 border-b border-dashed border-gray-200"></div>
                         </div>
                       )}
                     </React.Fragment>
                   );
                 }
+
+              if (item.itemType === 'location') {
+                const l = item as any;
+                // Determine travel mode from previous point to this location
+                let navTravelMode = 'transit'; // default
+                
+                // Find previous point in mixed timeline (either location or transport_arrival)
+                let prevPoint = null;
+                for (let i = index - 1; i >= 0; i--) {
+                  const prevItem = mixedTimeline[i];
+                  if (prevItem.itemType === 'location' || prevItem.itemType === 'transport_arrival') {
+                    prevPoint = prevItem as any;
+                    break;
+                  }
+                }
+
+                if (prevPoint) {
+                  const prevTravelMode = prevPoint.travelMode;
+                  if (prevTravelMode === 'DRIVING') navTravelMode = 'driving';
+                  else if (prevTravelMode === 'WALKING') navTravelMode = 'walking';
+                  else if (prevTravelMode === 'BICYCLING') navTravelMode = 'bicycling';
+                  else navTravelMode = 'transit';
+                }
+
+                // Find if there's a next point to show the travel mode selector
+                const hasNextPoint = index < mixedTimeline.length - 1;
+
+                const isExpanded = expandedCards.has(`loc-${l.id}`);
+
+                return (
+                  <React.Fragment key={`loc-${l.id}`}>
+                    <div className="relative flex items-start gap-4 mb-6">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full border-4 border-white bg-orange-100 text-orange-600 shadow shrink-0 z-10 relative mt-2">
+                        <MapPin className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 relative flex flex-col">
+                        {/* Top Right Action Icons */}
+                        <div className="absolute top-3 right-3 flex gap-2 z-20">
+                          <a 
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${l.lat},${l.lng}&travelmode=${navTravelMode}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-7 h-7 flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                            title="导航到这里"
+                          >
+                            <Navigation className="w-4 h-4" />
+                          </a>
+                          {canEdit && (
+                            <>
+                              <button 
+                                onClick={() => openEditLocation(l)}
+                                className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-orange-500 hover:bg-orange-50 rounded-full transition-colors"
+                                title="编辑"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button 
+                                onClick={() => confirmDeleteLocation(l.id)}
+                                className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                                title="删除"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                        
+                        {/* Title and Address */}
+                        <h3 className="font-bold text-gray-900 pr-24 text-lg leading-tight mb-1 truncate" title={l.name}>{l.name}</h3>
+                        {l.address && <p className="text-sm text-gray-500 pr-24 leading-relaxed mb-1 line-clamp-2" title={l.address}>{l.address}</p>}
+                        {l.mapUrl && (
+                          <a 
+                            href={l.mapUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors mb-3 relative z-20"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Navigation className="w-3 h-3" />
+                            查看 Google Maps
+                          </a>
+                        )}
+
+                        {/* Time, Sort, and Expand Toggle Row */}
+                        <div className="flex flex-wrap items-center justify-between mt-auto pt-2 gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Clock className="w-4 h-4 text-orange-400 shrink-0" />
+                            <span className="text-sm text-gray-700 font-medium shrink-0">访问:</span>
+                            <span className="text-sm text-gray-600 font-medium bg-orange-50/50 px-2 py-1 rounded-lg border border-orange-100/50 shrink-0 whitespace-nowrap">
+                              {formatTimeAMPM(l.time || '--:--')}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 shrink-0 z-30 ml-auto">
+                            {/* Sort buttons moved out of expanded view for easy access */}
+                            {canEdit && (
+                              <div className="flex border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white h-8">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); reorderItem(index, -1); }}
+                                  className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors border-r border-gray-200 flex items-center justify-center active:bg-orange-100"
+                                  title="向上移动"
+                                >
+                                  <ChevronUp className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); reorderItem(index, 1); }}
+                                  className="w-8 h-full bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center justify-center active:bg-orange-100"
+                                  title="向下移动"
+                                >
+                                  <ChevronDown className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
+                            
+                            {/* Toggle Expansion Button */}
+                            <button 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleCardExpansion(`loc-${l.id}`);
+                              }}
+                              className="flex items-center justify-center w-8 h-8 bg-orange-50 hover:bg-orange-100 rounded-lg text-orange-600 transition-colors shadow-sm"
+                            >
+                              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Expanded Content */}
+                        {isExpanded && (
+                          <div className="mt-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200 relative z-30">
+                            <div className="flex flex-col gap-4">
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs text-orange-600 font-medium">访问时间</label>
+                                <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 shadow-sm focus-within:ring-1 focus-within:ring-orange-400 transition-shadow w-full">
+                                  <input
+                                    disabled={!canEdit}
+                                    type="time"
+                                    value={l.time || ''}
+                                    onChange={(e) => updateLocation(l.id, { time: e.target.value })}
+                                    className="text-sm bg-transparent outline-none font-mono text-gray-700 w-full"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Travel Mode to next point */}
+                    {hasNextPoint && (
+                      <div className="relative flex items-center gap-4 mb-6">
+                        <div className="w-8 shrink-0 z-10 flex justify-center relative">
+                          <div className="bg-white border border-gray-200 rounded-full shadow-sm p-1 flex">
+                            <select 
+                              disabled={!canEdit}
+                              value={l.travelMode || 'TRANSIT'}
+                              onChange={(e) => updateLocation(l.id, { travelMode: e.target.value })}
+                              className="text-xs text-gray-600 bg-transparent outline-none cursor-pointer appearance-none text-center pl-1 pr-2"
+                              title="前往下一地点的出行方式"
+                            >
+                              <option value="TRANSIT">🚌 公交</option>
+                              <option value="DRIVING">🚗 驾车</option>
+                              <option value="WALKING">🚶 步行</option>
+                              <option value="BICYCLING">🚲 骑行</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="flex-1 border-b border-dashed border-gray-200"></div>
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              }
 
                 return null;
               })}
@@ -1864,7 +1882,27 @@ export const PlanTrip: React.FC = () => {
             />
           ))}
           <RoutePolyline 
-            locations={activeDayLocations.map(l => ({lat: l.lat, lng: l.lng, placeId: l.placeId, travelMode: l.travelMode || 'TRANSIT', time: l.time}))} 
+            locations={mixedTimeline.map((item, idx) => {
+              if (item.itemType === 'location') {
+                const l = item as any;
+                return { lat: l.lat, lng: l.lng, placeId: l.placeId, travelMode: l.travelMode || 'TRANSIT', time: l.time };
+              } else if (item.itemType === 'transport_departure') {
+                const t = item as any;
+                // If it's a flight, skip the route to the arrival point (which is usually the next item)
+                const isFlight = t.type === 'flight' || t.type === '航班';
+                return { 
+                  lat: t.depLat, 
+                  lng: t.depLng, 
+                  travelMode: t.travelMode || 'TRANSIT', 
+                  time: t.departureTime?.split('T')[1],
+                  skipToNext: isFlight
+                };
+              } else {
+                const t = item as any;
+                return { lat: t.arrLat, lng: t.arrLng, travelMode: t.travelMode || 'TRANSIT', time: t.arrivalTime?.split('T')[1] };
+              }
+            }).filter(p => p.lat !== undefined && p.lng !== undefined) as any} 
+            baseDate={addDays(parseLocal(startDate), activeDay)}
             onRouteCalculated={handleRouteCalculated}
           />
         </Map>
